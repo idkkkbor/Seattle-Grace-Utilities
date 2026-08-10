@@ -1,14 +1,17 @@
 require("dotenv").config();
 
-const { startBirthdaySystem } = require("./systems/birthday");
-const { startPromotionLogger } = require("./systems/promotionLogger");
-
 const {
     Client,
     GatewayIntentBits,
     EmbedBuilder,
     Events
 } = require("discord.js");
+
+const fs = require("fs");
+const path = require("path");
+
+const { startBirthdaySystem } = require("./systems/birthday");
+const { startPromotionLogger } = require("./systems/promotionLogger");
 
 const client = new Client({
     intents: [
@@ -20,6 +23,82 @@ const client = new Client({
 });
 
 // ===============================
+// SLASH COMMAND HANDLER
+// ===============================
+
+const commands = new Map();
+
+const commandsPath = path.join(__dirname, "commands");
+
+if (fs.existsSync(commandsPath)) {
+
+    const commandFiles = fs.readdirSync(commandsPath)
+        .filter(file => file.endsWith(".js"));
+
+    for (const file of commandFiles) {
+
+        const command = require(
+            path.join(commandsPath, file)
+        );
+
+        commands.set(
+            command.data.name,
+            command
+        );
+
+        console.log(`Loaded command: ${file}`);
+
+    }
+
+}
+
+// ===============================
+// INTERACTION HANDLER
+// ===============================
+
+client.on("interactionCreate", async interaction => {
+
+    if (!interaction.isChatInputCommand()) {
+        return;
+    }
+
+    const command = commands.get(
+        interaction.commandName
+    );
+
+    if (!command) {
+        return;
+    }
+
+    try {
+
+        await command.execute(interaction);
+
+    } catch (error) {
+
+        console.error(error);
+
+        if (interaction.replied || interaction.deferred) {
+
+            await interaction.followUp({
+                content: "❌ There was an error running this command.",
+                ephemeral: true
+            });
+
+        } else {
+
+            await interaction.reply({
+                content: "❌ There was an error running this command.",
+                ephemeral: true
+            });
+
+        }
+
+    }
+
+});
+
+// ===============================
 // SGH ROLE CONNECTION SYSTEM
 // ===============================
 
@@ -28,9 +107,9 @@ const client = new Client({
 const CORPORATE_ROLE = "1521852860655075459";
 
 const CORPORATE_CONNECTION_ROLES = [
-    "1514605444528738384", // Community Relations
-    "1489901563613937826", // Human Resources
-    "1515797638610681886"  // Clinical Operations
+    "1514605444528738384",
+    "1489901563613937826",
+    "1515797638610681886"
 ];
 
 // Community Relations
@@ -181,7 +260,7 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
 // WELCOME MESSAGE
 // ===============================
 
-client.on(Events.GuildMemberAdd, async (member) => {
+client.on(Events.GuildMemberAdd, async member => {
 
     const channel = member.guild.channels.cache.get(
         "1491820040297775184"
@@ -292,10 +371,8 @@ client.once("ready", () => {
 
     console.log(`${client.user.tag} is online!`);
 
-    // Birthday System
     startBirthdaySystem(client);
 
-    // Promotion Logger
     startPromotionLogger(client);
 
 });
