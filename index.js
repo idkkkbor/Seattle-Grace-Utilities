@@ -1,6 +1,11 @@
 require("dotenv").config();
 
-const { Client, GatewayIntentBits } = require("discord.js");
+const {
+    Client,
+    GatewayIntentBits,
+    EmbedBuilder,
+    Events
+} = require("discord.js");
 
 const client = new Client({
     intents: [
@@ -9,25 +14,22 @@ const client = new Client({
     ]
 });
 
-
 // ===============================
 // SGH ROLE CONNECTION SYSTEM
 // ===============================
 
-
 // Corporate Team
+
 const CORPORATE_ROLE = "1521852860655075459";
 
-
-// Roles that receive Corporate
 const CORPORATE_CONNECTION_ROLES = [
-    "1514605444528738384", // Community Relations
-    "1489901563613937826", // Human Resources
-    "1515797638610681886"  // Clinical Operations
+    "1514605444528738384",
+    "1489901563613937826",
+    "1515797638610681886"
 ];
 
+// Community Relations
 
-// Roles that receive Community Relations
 const COMMUNITY_ROLE = "1514605444528738384";
 
 const COMMUNITY_CONNECTION_ROLES = [
@@ -38,12 +40,12 @@ const COMMUNITY_CONNECTION_ROLES = [
     "1516153582116667614"
 ];
 
-
-// Department Year Roles
+// Department Connections
 
 const DEPARTMENT_CONNECTIONS = {
 
     // Medical
+
     "1511366643446583406": [
         "1501986018927050843",
         "1501987639794995300",
@@ -54,6 +56,7 @@ const DEPARTMENT_CONNECTIONS = {
     ],
 
     // Nursing
+
     "1511366831867170987": [
         "1501986276700848149",
         "1501988149226639433",
@@ -64,6 +67,7 @@ const DEPARTMENT_CONNECTIONS = {
     ],
 
     // Paramedicine
+
     "1511366907884736634": [
         "1501986584113840238",
         "1501988621723373718",
@@ -74,6 +78,7 @@ const DEPARTMENT_CONNECTIONS = {
     ],
 
     // Surgical
+
     "1511366736782299176": [
         "1501986440832094228",
         "1501988291170275449",
@@ -85,15 +90,13 @@ const DEPARTMENT_CONNECTIONS = {
 
 };
 
-
 // ===============================
 // ROLE AUTOMATION
 // ===============================
 
 client.on("guildMemberUpdate", async (oldMember, newMember) => {
 
-
-    // Community Relations Connections
+    // Community Relations
 
     const getsCommunity = COMMUNITY_CONNECTION_ROLES.some(role =>
         newMember.roles.cache.has(role)
@@ -103,14 +106,14 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
         getsCommunity &&
         !newMember.roles.cache.has(COMMUNITY_ROLE)
     ) {
+
         await newMember.roles.add(COMMUNITY_ROLE);
 
         console.log(
             `Added Community Relations to ${newMember.user.tag}`
         );
+
     }
-
-
 
     // Department Connections
 
@@ -122,7 +125,6 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
             newMember.roles.cache.has(role)
         );
 
-
         if (
             getsDepartment &&
             !newMember.roles.cache.has(departmentRole)
@@ -133,17 +135,16 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
             console.log(
                 `Added department role to ${newMember.user.tag}`
             );
+
         }
+
     }
-
-
 
     // Corporate Connections
 
     const getsCorporate = CORPORATE_CONNECTION_ROLES.some(role =>
         newMember.roles.cache.has(role)
     );
-
 
     if (
         getsCorporate &&
@@ -155,20 +156,123 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
         console.log(
             `Added Corporate Team to ${newMember.user.tag}`
         );
+
     }
 
 });
 
+// ===============================
+// WELCOME MESSAGE
+// ===============================
+
+client.on(Events.GuildMemberAdd, async (member) => {
+
+    const channel = member.guild.channels.cache.get(
+        "1491820040297775184"
+    );
+
+    if (!channel) {
+        console.log("Welcome channel was not found.");
+        return;
+    }
+
+    const embed = new EmbedBuilder()
+
+        .setColor("#2F80ED")
+
+        .setTitle(
+            "<:Seattle:1523995021253148693> | Welcome"
+        )
+
+        .setDescription(
+`Hello, ${member}
+
+Welcome to **Seattle Grace Hospital**. We are a professional, fun, and realistic roleplay server based on the game **Maple Hospital** inside Roblox.
+
+If you don't play Roblox or Maple Hospital, you're still more than welcome to hang out with us!
+
+## 📌 Important Channels
+
+**✅ Verification**
+<#1491821794045329538>
+
+Type **/verify**, choose **Bloxlink**, and follow the instructions.
+
+**📢 Announcements**
+<#1490045452513579008>
+
+All important announcements and updates are posted here.
+
+**🕒 Sessions**
+<#1489911067709673562>
+
+Find session polls and server opening notifications here.
+
+**💬 General Chat**
+<#1489711285640761406>
+
+Chat with the community!
+
+**📄 Applications**
+<#1489891020249497740>
+
+Apply for Human Resources, Administrator, Community Relations, Director of Department, or Clinical Operations.
+
+━━━━━━━━━━━━━━━━━━
+
+❓ Need help?
+
+Open a ticket in <#1489904772470276126> if you have any questions.
+
+We hope you enjoy your stay at **Seattle Grace Hospital**! 🏥`
+        )
+
+        .setImage(
+            "https://media.discordapp.net/attachments/1513089749710274631/1523807018270326905/content.png?ex=6a75a920&is=6a7457a0&hm=b107bc04cb8574d8209a6a23f623c771ded79664fa071b2cdecbf53231cfbb6f&=&format=webp&quality=lossless&width=1280&height=720"
+        )
+
+        .setThumbnail(
+            member.user.displayAvatarURL({
+                dynamic: true
+            })
+        )
+
+        .setFooter({
+            text: `Member #${member.guild.memberCount} • Welcome to Seattle Grace Hospital`
+        })
+
+        .setTimestamp();
+
+    try {
+
+        await channel.send({
+            content: `${member}`,
+            embeds: [embed]
+        });
+
+        console.log(
+            `Sent welcome message for ${member.user.tag}`
+        );
+
+    } catch (error) {
+
+        console.error(
+            `Failed to send welcome message for ${member.user.tag}:`,
+            error
+        );
+
+    }
+
+});
 
 // ===============================
 // BOT ONLINE
 // ===============================
 
 client.once("ready", () => {
+
     console.log(`${client.user.tag} is online!`);
+
 });
 
-
 client.login(process.env.TOKEN);
-
-client.on("guildMemberUpdate", async (oldMember, newMember) => {});
