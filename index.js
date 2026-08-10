@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+const { startBirthdaySystem } = require("./systems/birthday");
+const { startPromotionLogger } = require("./systems/promotionLogger");
+
 const {
     Client,
     GatewayIntentBits,
@@ -10,7 +13,9 @@ const {
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
     ]
 });
 
@@ -23,9 +28,9 @@ const client = new Client({
 const CORPORATE_ROLE = "1521852860655075459";
 
 const CORPORATE_CONNECTION_ROLES = [
-    "1514605444528738384",
-    "1489901563613937826",
-    "1515797638610681886"
+    "1514605444528738384", // Community Relations
+    "1489901563613937826", // Human Resources
+    "1515797638610681886"  // Clinical Operations
 ];
 
 // Community Relations
@@ -96,65 +101,76 @@ const DEPARTMENT_CONNECTIONS = {
 
 client.on("guildMemberUpdate", async (oldMember, newMember) => {
 
-    // Community Relations
+    try {
 
-    const getsCommunity = COMMUNITY_CONNECTION_ROLES.some(role =>
-        newMember.roles.cache.has(role)
-    );
+        // Community Relations
 
-    if (
-        getsCommunity &&
-        !newMember.roles.cache.has(COMMUNITY_ROLE)
-    ) {
-
-        await newMember.roles.add(COMMUNITY_ROLE);
-
-        console.log(
-            `Added Community Relations to ${newMember.user.tag}`
-        );
-
-    }
-
-    // Department Connections
-
-    for (const departmentRole in DEPARTMENT_CONNECTIONS) {
-
-        const yearRoles = DEPARTMENT_CONNECTIONS[departmentRole];
-
-        const getsDepartment = yearRoles.some(role =>
+        const getsCommunity = COMMUNITY_CONNECTION_ROLES.some(role =>
             newMember.roles.cache.has(role)
         );
 
         if (
-            getsDepartment &&
-            !newMember.roles.cache.has(departmentRole)
+            getsCommunity &&
+            !newMember.roles.cache.has(COMMUNITY_ROLE)
         ) {
 
-            await newMember.roles.add(departmentRole);
+            await newMember.roles.add(COMMUNITY_ROLE);
 
             console.log(
-                `Added department role to ${newMember.user.tag}`
+                `Added Community Relations to ${newMember.user.tag}`
             );
 
         }
 
-    }
+        // Department Connections
 
-    // Corporate Connections
+        for (const departmentRole in DEPARTMENT_CONNECTIONS) {
 
-    const getsCorporate = CORPORATE_CONNECTION_ROLES.some(role =>
-        newMember.roles.cache.has(role)
-    );
+            const yearRoles = DEPARTMENT_CONNECTIONS[departmentRole];
 
-    if (
-        getsCorporate &&
-        !newMember.roles.cache.has(CORPORATE_ROLE)
-    ) {
+            const getsDepartment = yearRoles.some(role =>
+                newMember.roles.cache.has(role)
+            );
 
-        await newMember.roles.add(CORPORATE_ROLE);
+            if (
+                getsDepartment &&
+                !newMember.roles.cache.has(departmentRole)
+            ) {
 
-        console.log(
-            `Added Corporate Team to ${newMember.user.tag}`
+                await newMember.roles.add(departmentRole);
+
+                console.log(
+                    `Added department role to ${newMember.user.tag}`
+                );
+
+            }
+
+        }
+
+        // Corporate Connections
+
+        const getsCorporate = CORPORATE_CONNECTION_ROLES.some(role =>
+            newMember.roles.cache.has(role)
+        );
+
+        if (
+            getsCorporate &&
+            !newMember.roles.cache.has(CORPORATE_ROLE)
+        ) {
+
+            await newMember.roles.add(CORPORATE_ROLE);
+
+            console.log(
+                `Added Corporate Team to ${newMember.user.tag}`
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            `Role automation error for ${newMember.user.tag}:`,
+            error
         );
 
     }
@@ -172,8 +188,11 @@ client.on(Events.GuildMemberAdd, async (member) => {
     );
 
     if (!channel) {
+
         console.log("Welcome channel was not found.");
+
         return;
+
     }
 
     const embed = new EmbedBuilder()
@@ -272,6 +291,12 @@ We hope you enjoy your stay at **Seattle Grace Hospital**! 🏥`
 client.once("ready", () => {
 
     console.log(`${client.user.tag} is online!`);
+
+    // Birthday System
+    startBirthdaySystem(client);
+
+    // Promotion Logger
+    startPromotionLogger(client);
 
 });
 
