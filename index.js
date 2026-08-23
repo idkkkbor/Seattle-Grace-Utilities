@@ -10,7 +10,6 @@ const {
 const fs = require("fs");
 const path = require("path");
 
-const { startBirthdaySystem } = require("./systems/birthday");
 const { startPromotionLogger } = require("./systems/promotionLogger");
 
 const client = new Client({
@@ -256,112 +255,6 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
 
 });
 
-// ===============================
-// WELCOME MESSAGE
-// ===============================
-
-client.on(Events.GuildMemberAdd, async member => {
-
-    const channel = member.guild.channels.cache.get(
-        "1491820040297775184"
-    );
-
-    if (!channel) {
-
-        console.log("Welcome channel was not found.");
-
-        return;
-
-    }
-
-    const embed = new EmbedBuilder()
-
-        .setColor("#2F80ED")
-
-        .setTitle(
-            "<:Seattle:1523995021253148693> | Welcome"
-        )
-
-        .setDescription(
-`Hello, ${member}
-
-Welcome to **Seattle Grace Hospital**. We are a professional, fun, and realistic roleplay server based on the game **Maple Hospital** inside Roblox.
-
-If you don't play Roblox or Maple Hospital, you're still more than welcome to hang out with us!
-
-## 📌 Important Channels
-
-**✅ Verification**
-<#1491821794045329538>
-
-Type **/verify**, choose **Bloxlink**, and follow the instructions.
-
-**📢 Announcements**
-<#1490045452513579008>
-
-All important announcements and updates are posted here.
-
-**🕒 Sessions**
-<#1489911067709673562>
-
-Find session polls and server opening notifications here.
-
-**💬 General Chat**
-<#1489711285640761406>
-
-Chat with the community!
-
-**📄 Applications**
-<#1489891020249497740>
-
-Apply for Human Resources, Administrator, Community Relations, Director of Department, or Clinical Operations.
-
-━━━━━━━━━━━━━━━━━━
-
-❓ Need help?
-
-Open a ticket in <#1489904772470276126> if you have any questions.
-
-We hope you enjoy your stay at **Seattle Grace Hospital**! 🏥`
-        )
-
-        .setImage(
-            "https://media.discordapp.net/attachments/1513089749710274631/1523807018270326905/content.png?ex=6a75a920&is=6a7457a0&hm=b107bc04cb8574d8209a6a23f623c771ded79664fa071b2cdecbf53231cfbb6f&=&format=webp&quality=lossless&width=1280&height=720"
-        )
-
-        .setThumbnail(
-            member.user.displayAvatarURL({
-                dynamic: true
-            })
-        )
-
-        .setFooter({
-            text: `Member #${member.guild.memberCount} • Welcome to Seattle Grace Hospital`
-        })
-
-        .setTimestamp();
-
-    try {
-
-        await channel.send({
-            content: `${member}`,
-            embeds: [embed]
-        });
-
-        console.log(
-            `Sent welcome message for ${member.user.tag}`
-        );
-
-    } catch (error) {
-
-        console.error(
-            `Failed to send welcome message for ${member.user.tag}:`,
-            error
-        );
-
-    }
-
-});
 
 // ===============================
 // BOT ONLINE
@@ -371,10 +264,15 @@ client.once("ready", () => {
 
     console.log(`${client.user.tag} is online!`);
 
-    startBirthdaySystem(client);
-
     startPromotionLogger(client);
 
+    console.log("Promotion Logger started.");
+    console.log("Role Connections system ready.");
+
 });
+
+// ===============================
+// LOGIN
+// ===============================
 
 client.login(process.env.TOKEN);
